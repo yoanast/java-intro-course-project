@@ -1,129 +1,195 @@
-package fmi.courseProject;
+package CourseProject;
 
-import java.util.Arrays;
-import java.util.Collections;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.Random;
 
-public class GameBoard {
+public class GameBoard extends JFrame {
 
-    /** Метод, чрез който запълваме игралната дъска със съответните полета.
-     *
-     * @param gameBoard Масив от полета
-     */
+    public static int firstRandomNumber;
+    public static int secondRandomNumber;
+    public Object[][] tileCollection;
+    public Object[][] figureCollection;
 
-    public static void fillGameBoard(Field[] gameBoard) {
+    public GameBoard() {
 
-        for (int i = 0; i <= 7; i++) {
-            gameBoard[i] = new Field("Trap" + i, "| T ", i, i, "| T ",true);
-        }
-
-        for(int i = 7; i <= 10; i++ ) {
-            gameBoard[i] = new Field("Invest" + i, "| I ", i, i, "| I ",true);
-        }
-
-        for(int i = 10; i <= 13; i++ ) {
-            gameBoard[i] = new Field("Party" + i, "| P ", i, i,"| P ",true);
-        }
-
-        for(int i = 13; i <= 16; i++ ) {
-            gameBoard[i] = new Field("Chance" + i, "| C ", i, i, "| C ",true);
-        }
-
-        for(int i = 16; i <= 19; i++ ) {
-            gameBoard[i] = new Field("Steal" + i, "|St ", i, i,"|St ", true);
-        }
-
-        for(int i = 19; i <= 19; i++) {
-            gameBoard[i] = new Field("Start" + i, "| S |", i, i, "| S |");
-        }
-
+        this.setSize(650, 550);
+        this.setVisible(true);
+        this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        this.setResizable(false);
+        this.tileCollection = new Object[7][9];
+        fillTileCollection();
+        this.figureCollection = new Object[7][9];
+        fillP1FigureCollection();
+        fillP2FigureCollection();
     }
 
-    /** Метод, чрез който визуализираме игралната дъска.
-     *
-     * @param gameBoard Масив от полета
+    /**
+     *  Метод, чрез който визуализираме полетата по дадени ред и колона.
      */
-
-    protected static void drawGameBoard(Field[] gameBoard) {
-
-        for(int i = 0; i <= 19; i++) {
-            System.out.printf("%s", gameBoard[i].symbol);
-
-            if(i == 7 || i == 9 || i == 11) System.out.println("|");
-            if(i == 8 || i == 10) System.out.print("|                       ");
+    private void renderTiles(Graphics g, int row, int col) {
+        if (this.isThereTile(row, col)) {
+            Tile t = (Tile)this.getTile(row, col);
+            t.drawTiles(g);
         }
-
     }
 
-    /** Метод, чрез който разбъркваме позициите на полетата на игралната дъска.
-     *
-     * @param gameBoard Масив от полета
+    private void renderFigures(Graphics g, int row, int col) {
+
+        if(this.isThereFigure(row,col)) {
+            Figure fig = (Figure)this.getFigure(row,col);
+            fig.drawFigure(g);
+        }
+    }
+
+    /**
+     *  Метод, чрез който изчертаваме игралната дъска и нейните елементи.
      */
+    @Override
+    public void paint(Graphics g) {
 
-    public static void shufflePositions(Field[] gameBoard) {
+        for(int row = 0; row < 7; row++) {
+            for(int col = 0; col < 9; col++) {
 
-        int tempPos = 0;
-        int tempId = 0;
-        String tempName = null;
-        String tempSymbol = null;
-        String initSymbol = null;
-
-        Collections.shuffle(Arrays.asList(gameBoard));
-
-        for(int i = 0; i<= 19; i++) {
-            if(gameBoard[i].getName().equals("Start19")) {
-                tempPos = i;
-                tempSymbol = gameBoard[19].getSymbol();
-                tempName = gameBoard[19].getName();
-                initSymbol = gameBoard[19].getInitSymbol();
-                tempId = i;
-                break;
+                this.renderTiles(g,row,col);
+                this.renderFigures(g, row, col);
             }
-
         }
-        gameBoard[tempPos].setName(tempName);
-        gameBoard[tempPos].setSymbol(tempSymbol);
-        gameBoard[tempPos].setId(tempId);
-        gameBoard[tempPos].setInitSymbol(initSymbol);
-        gameBoard[19].setName("Start19");
-        gameBoard[19].setSymbol("| S |");
-        gameBoard[19].setInitSymbol("| S |");
-        gameBoard[19].setId(19);
-        setMovePositions(gameBoard);
-
     }
 
-    /** Заради формата на дъската се налага да създадем метод , чрез който задаваме позиции на полетата, за да може
-     *  играчът да се движи по нея по правилния(очаквания) начин.
-     *
-     * @param gameBoard Масив от полета
+    /**
+     *  Метод, който ни връща обект от колекцията по зададени ред и колона.
      */
-
-    public static void setMovePositions(Field[] gameBoard) {
-
-        gameBoard[0].setPosition(10);
-        gameBoard[1].setPosition(11);
-        gameBoard[2].setPosition(12);
-        gameBoard[3].setPosition(13);
-        gameBoard[4].setPosition(14);
-        gameBoard[5].setPosition(15);
-        gameBoard[6].setPosition(16);
-        gameBoard[7].setPosition(17);
-
-        gameBoard[8].setPosition(9);
-        gameBoard[9].setPosition(18);
-        gameBoard[10].setPosition(8);
-        gameBoard[11].setPosition(19);
-
-        gameBoard[12].setPosition(7);
-        gameBoard[13].setPosition(6);
-        gameBoard[14].setPosition(5);
-        gameBoard[15].setPosition(4);
-        gameBoard[16].setPosition(3);
-        gameBoard[17].setPosition(2);
-        gameBoard[18].setPosition(1);
-        gameBoard[19].setPosition(0);
-
-
+    public Object getFigure(int row, int col) {
+        return this.figureCollection[row][col];
     }
+
+    /**
+     *  Метод, който ни връща дали на дадени ред и колона има фигура.
+     */
+    public boolean isThereFigure(int row, int col) {
+        return this.getFigure(row, col) != null;
+    }
+
+    /**
+     *  Метод, който ни връща обект от колекцията по зададени ред и колона.
+     */
+    public Object getTile(int row, int col) {
+        return this.tileCollection[row][col];
+    }
+
+    /**
+     *  Метод, който ни връща дали на дадени ред и колона вече има поле.
+     */
+    public boolean isThereTile(int row, int col) {
+        return this.tileCollection[row][col] != null;
+    }
+
+    /**
+     *  Метод, чрез който пълним колекцията на дъската с обекти от тип Tile.
+     */
+    public void fillTileCollection() {
+
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 9; j++) {
+                this.tileCollection[i][j] = (new PlayerATerritory(i,j));
+            }
+        }
+
+        for (int i = 2; i < 5; i++) {
+            for (int j = 0; j < 9; j++) {
+                this.tileCollection[i][j] = (new Battlefield(i,j));
+            }
+        }
+
+        for (int i = 5; i <= 6; i++) {
+            for (int j = 0; j < 9; j++) {
+                this.tileCollection[i][j] = (new PlayerBTerritory(i,j));
+            }
+        }
+    }
+
+    /**
+     *  Метод, чрез който получаваме две случайни числа и ги записваме на променливите.
+     */
+    public static void getRandomPositionForP1Figure() {
+
+        Random rand = new Random();
+        firstRandomNumber = rand.nextInt(2);
+        secondRandomNumber = rand.nextInt(9);
+    }
+
+    public static void getRandomPositionForP2Figure() {
+
+        Random rand = new Random();
+        firstRandomNumber = rand.nextInt(7);
+        secondRandomNumber = rand.nextInt(9);
+        while (firstRandomNumber != 5 && firstRandomNumber != 6 ) {
+            firstRandomNumber = rand.nextInt(7);
+        }
+    }
+
+    /**
+     *  Метод, чрез който пълним колекция с обекти от тип Figure.
+     */
+    public void fillP1FigureCollection() {
+
+        for(int i = 0; i < 2; i++) {
+            getRandomPositionForP1Figure();
+            if(!this.isThereFigure(firstRandomNumber, secondRandomNumber)) {
+                this.figureCollection[firstRandomNumber][secondRandomNumber] =
+                        (new Knight(firstRandomNumber, secondRandomNumber, Color.PINK));
+            } else i--;
+        }
+
+        for(int i = 0; i < 2; i++) {
+            getRandomPositionForP1Figure();
+            if(!this.isThereFigure(firstRandomNumber, secondRandomNumber)) {
+                this.figureCollection[firstRandomNumber][secondRandomNumber] =
+                        (new Elf(firstRandomNumber, secondRandomNumber, Color.PINK));
+            } else i--;
+        }
+
+        for(int i = 0; i < 2; i++) {
+            getRandomPositionForP1Figure();
+            if(!this.isThereFigure(firstRandomNumber, secondRandomNumber)) {
+                this.figureCollection[firstRandomNumber][secondRandomNumber] =
+                        (new Dwarf(firstRandomNumber, secondRandomNumber, Color.PINK));
+            } else i--;
+        }
+    }
+
+    /**
+     *  Метод, чрез който пълним колекция с обекти от тип Figure.
+     */
+    public void fillP2FigureCollection() {
+
+        for(int i = 0; i < 2; i++) {
+            getRandomPositionForP2Figure();
+            if(!this.isThereFigure(firstRandomNumber, secondRandomNumber)) {
+                this.figureCollection[firstRandomNumber][secondRandomNumber] =
+                        (new Knight(firstRandomNumber, secondRandomNumber, Color.CYAN));
+            } else i--;
+        }
+
+        for(int i = 0; i < 2; i++) {
+            getRandomPositionForP2Figure();
+            if(!this.isThereFigure(firstRandomNumber, secondRandomNumber)) {
+                this.figureCollection[firstRandomNumber][secondRandomNumber] =
+                        (new Elf(firstRandomNumber, secondRandomNumber, Color.CYAN));
+            } else i--;
+        }
+
+        for(int i = 0; i < 2; i++) {
+            getRandomPositionForP2Figure();
+            if(!this.isThereFigure(firstRandomNumber, secondRandomNumber)) {
+                this.figureCollection[firstRandomNumber][secondRandomNumber] =
+                        (new Dwarf(firstRandomNumber, secondRandomNumber, Color.CYAN));
+            } else i--;
+        }
+    }
+
+
 
 }
